@@ -6,7 +6,10 @@ function App(){
 
   const [image,setImage] = useState(null)
   const [text,setText] = useState('')
-  const [loading,setLoading] = useState(false)
+
+  const [store,setStore] = useState('')
+  const [money,setMoney] = useState('')
+  const [date,setDate] = useState('')
 
 
   async function upload(e){
@@ -16,25 +19,75 @@ function App(){
     if(!file) return
 
 
-    const url = URL.createObjectURL(file)
-
-    setImage(url)
-
-    setLoading(true)
+    setImage(URL.createObjectURL(file))
 
 
     const result = await Tesseract.recognize(
       file,
-      'kor+eng',
-      {
-        logger: m => console.log(m)
-      }
+      'kor+eng'
     )
 
 
-    setText(result.data.text)
+    const ocr = result.data.text
 
-    setLoading(false)
+    setText(ocr)
+
+
+    analyze(ocr)
+
+  }
+
+
+
+  function analyze(value){
+
+    // 금액 찾기
+    const numbers = value.match(
+      /[\d,]+원?/g
+    )
+
+
+    if(numbers){
+
+      const price =
+        numbers[0]
+        .replace(/,/g,'')
+        .replace('원','')
+
+      setMoney(price)
+
+    }
+
+
+    // 날짜 찾기
+
+    const dates =
+      value.match(
+        /\d{4}[.-]\d{1,2}[.-]\d{1,2}/
+      )
+
+
+    if(dates){
+
+      setDate(dates[0])
+
+    }
+
+
+    // 첫 번째 줄을 상호명으로 추정
+
+    const lines =
+      value
+      .split('\n')
+      .filter(x=>x.trim())
+
+
+    if(lines.length){
+
+      setStore(lines[0])
+
+    }
+
 
   }
 
@@ -47,7 +100,7 @@ function App(){
       <h1>💰 가계부</h1>
 
 
-      <h3>📸 영수증 / 거래내역 등록</h3>
+      <h3>📸 영수증 등록</h3>
 
 
       <input
@@ -67,24 +120,41 @@ function App(){
       }
 
 
-      {
-        loading &&
-        <p>🔎 글자 인식 중...</p>
-      }
+
+      <h3>자동 인식 결과</h3>
 
 
-      {
-        text &&
-        <div className="card">
+      <input
+        placeholder="상호명"
+        value={store}
+        onChange={e=>setStore(e.target.value)}
+      />
 
-          <h3>인식 결과</h3>
 
-          <pre>
-            {text}
-          </pre>
+      <input
+        placeholder="금액"
+        value={money}
+        onChange={e=>setMoney(e.target.value)}
+      />
 
-        </div>
-      }
+
+      <input
+        placeholder="날짜"
+        value={date}
+        onChange={e=>setDate(e.target.value)}
+      />
+
+
+
+      <div className="card">
+
+        <h3>원본 OCR</h3>
+
+        <pre>
+          {text}
+        </pre>
+
+      </div>
 
 
     </div>
