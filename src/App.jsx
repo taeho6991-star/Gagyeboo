@@ -1,42 +1,43 @@
 import { useState } from 'react'
+import Tesseract from 'tesseract.js'
+
 
 function App(){
 
-  const [list,setList] = useState([])
-  const [name,setName] = useState('')
-  const [money,setMoney] = useState('')
   const [image,setImage] = useState(null)
+  const [text,setText] = useState('')
+  const [loading,setLoading] = useState(false)
 
 
-  function add(){
-
-    if(!name || !money) return
-
-    setList([
-      ...list,
-      {
-        name,
-        money:Number(money),
-        date:new Date().toLocaleDateString(),
-        image
-      }
-    ])
-
-    setName('')
-    setMoney('')
-    setImage(null)
-  }
-
-
-  function upload(e){
+  async function upload(e){
 
     const file = e.target.files[0]
 
-    if(file){
-      setImage(URL.createObjectURL(file))
-    }
+    if(!file) return
+
+
+    const url = URL.createObjectURL(file)
+
+    setImage(url)
+
+    setLoading(true)
+
+
+    const result = await Tesseract.recognize(
+      file,
+      'kor+eng',
+      {
+        logger: m => console.log(m)
+      }
+    )
+
+
+    setText(result.data.text)
+
+    setLoading(false)
 
   }
+
 
 
   return (
@@ -46,7 +47,8 @@ function App(){
       <h1>💰 가계부</h1>
 
 
-      <h3>📷 영수증 등록</h3>
+      <h3>📸 영수증 / 거래내역 등록</h3>
+
 
       <input
         type="file"
@@ -60,62 +62,28 @@ function App(){
         <img
           src={image}
           width="100%"
-          alt="영수증"
+          alt=""
         />
       }
 
 
-      <input
-        placeholder="내용"
-        value={name}
-        onChange={e=>setName(e.target.value)}
-      />
-
-
-      <input
-        placeholder="금액"
-        type="number"
-        value={money}
-        onChange={e=>setMoney(e.target.value)}
-      />
-
-
-      <button onClick={add}>
-        등록
-      </button>
-
-
-
-      <h2>거래내역</h2>
+      {
+        loading &&
+        <p>🔎 글자 인식 중...</p>
+      }
 
 
       {
-        list.map((item,index)=>(
+        text &&
+        <div className="card">
 
-          <div className="card" key={index}>
+          <h3>인식 결과</h3>
 
-            📅 {item.date}
-            <br/>
+          <pre>
+            {text}
+          </pre>
 
-            {item.name}
-
-            <strong>
-              {item.money.toLocaleString()}원
-            </strong>
-
-
-            {
-              item.image &&
-              <img
-                src={item.image}
-                width="100%"
-                alt=""
-              />
-            }
-
-          </div>
-
-        ))
+        </div>
       }
 
 
