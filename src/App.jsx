@@ -11,6 +11,10 @@ function App(){
   const [money,setMoney] = useState('')
   const [date,setDate] = useState('')
 
+  const [list,setList] = useState(
+    JSON.parse(localStorage.getItem('moneyList')) || []
+  )
+
 
   async function upload(e){
 
@@ -32,7 +36,6 @@ function App(){
 
     setText(ocr)
 
-
     analyze(ocr)
 
   }
@@ -41,25 +44,20 @@ function App(){
 
   function analyze(value){
 
-    // 금액 찾기
-    const numbers = value.match(
-      /[\d,]+원?/g
-    )
+    const numbers =
+      value.match(/[\d,]+원?/g)
 
 
     if(numbers){
 
-      const price =
+      setMoney(
         numbers[0]
         .replace(/,/g,'')
         .replace('원','')
-
-      setMoney(price)
+      )
 
     }
 
-
-    // 날짜 찾기
 
     const dates =
       value.match(
@@ -74,8 +72,6 @@ function App(){
     }
 
 
-    // 첫 번째 줄을 상호명으로 추정
-
     const lines =
       value
       .split('\n')
@@ -88,8 +84,48 @@ function App(){
 
     }
 
+  }
+
+
+
+  function save(){
+
+    const item = {
+
+      store,
+      money:Number(money),
+      date:date || new Date().toLocaleDateString()
+
+    }
+
+
+    const newList=[
+      ...list,
+      item
+    ]
+
+
+    setList(newList)
+
+    localStorage.setItem(
+      'moneyList',
+      JSON.stringify(newList)
+    )
+
+
+    setStore('')
+    setMoney('')
+    setDate('')
 
   }
+
+
+
+  const total =
+    list.reduce(
+      (sum,item)=>sum+item.money,
+      0
+    )
 
 
 
@@ -97,7 +133,14 @@ function App(){
 
     <div className="app">
 
+
       <h1>💰 가계부</h1>
+
+
+      <h2>
+        총 지출 :
+        {total.toLocaleString()}원
+      </h2>
 
 
       <h3>📸 영수증 등록</h3>
@@ -121,9 +164,6 @@ function App(){
 
 
 
-      <h3>자동 인식 결과</h3>
-
-
       <input
         placeholder="상호명"
         value={store}
@@ -145,16 +185,34 @@ function App(){
       />
 
 
+      <button onClick={save}>
+        저장하기
+      </button>
 
-      <div className="card">
 
-        <h3>원본 OCR</h3>
 
-        <pre>
-          {text}
-        </pre>
+      <h2>📒 거래내역</h2>
 
-      </div>
+
+      {
+        list.map((item,index)=>(
+
+          <div className="card" key={index}>
+
+            📅 {item.date}
+            <br/>
+
+            🏪 {item.store}
+
+            <strong>
+              {item.money.toLocaleString()}원
+            </strong>
+
+          </div>
+
+        ))
+      }
+
 
 
     </div>
