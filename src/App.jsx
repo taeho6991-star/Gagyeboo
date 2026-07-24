@@ -5,6 +5,8 @@ function App(){
   const [list,setList] = useState([])
   const [name,setName] = useState('')
   const [money,setMoney] = useState('')
+  const [image,setImage] = useState(null)
+
 
   function add(){
 
@@ -15,12 +17,25 @@ function App(){
       {
         name,
         money:Number(money),
-        date:new Date().toLocaleDateString()
+        date:new Date().toLocaleDateString(),
+        image
       }
     ])
 
     setName('')
     setMoney('')
+    setImage(null)
+  }
+
+
+  function upload(e){
+
+    const file = e.target.files[0]
+
+    if(file){
+      setImage(URL.createObjectURL(file))
+    }
+
   }
 
 
@@ -30,11 +45,32 @@ function App(){
 
       <h1>💰 가계부</h1>
 
+
+      <h3>📷 영수증 등록</h3>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={upload}
+      />
+
+
+      {
+        image &&
+        <img
+          src={image}
+          width="100%"
+          alt="영수증"
+        />
+      }
+
+
       <input
         placeholder="내용"
         value={name}
         onChange={e=>setName(e.target.value)}
       />
+
 
       <input
         placeholder="금액"
@@ -43,19 +79,22 @@ function App(){
         onChange={e=>setMoney(e.target.value)}
       />
 
+
       <button onClick={add}>
         등록
       </button>
 
 
+
       <h2>거래내역</h2>
+
 
       {
         list.map((item,index)=>(
 
           <div className="card" key={index}>
 
-            {item.date}
+            📅 {item.date}
             <br/>
 
             {item.name}
@@ -64,15 +103,27 @@ function App(){
               {item.money.toLocaleString()}원
             </strong>
 
+
+            {
+              item.image &&
+              <img
+                src={item.image}
+                width="100%"
+                alt=""
+              />
+            }
+
           </div>
 
         ))
       }
+
 
     </div>
 
   )
 
 }
+
 
 export default App
